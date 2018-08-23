@@ -60,9 +60,17 @@
 			    echo "<span style='margin-left:15px;'>Anh&auml;nge</span>";
 			    echo "<ul class=\"apa-attachment-ul\">";
 		        foreach ( $attachments as $attachment ) {
+		            //echo "<pre>" . var_dump($attachment) . "</pre>";
+		            $path = $attachment->guid;
+		            $ext = substr($path, strrpos($path,'.')+1);
+		            $desc_text="Highres";
+		            if ($ext == "ai"){
+		                $desc_text = "Adobe Illustrator";
+                    }
 				    $class = "post-attachment mime-" . sanitize_title( $attachment->post_mime_type );
 				    $thumbimg = wp_get_attachment_link( $attachment->ID, 'thumbnail', false, true );
-				    echo '<li class="apa-attachment-li ' . $class . ' data-design-thumbnail">' . $thumbimg . '</li>';
+				    $textlink = wp_get_attachment_link( $attachment->ID, [], false,false,$desc_text);
+				    echo '<li class="apa-attachment-li ' . $class . ' data-design-thumbnail">' . $thumbimg . '<br>' . $textlink .'</li>';
 			    }
 			    echo "</ul>";
 
