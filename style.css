@@ -1,0 +1,25 @@
+/*
+  Theme Name:   APA-Theme based on TwentyFifteen
+  Theme URI:    http://www.aom.apa.at
+  Description:  Child Theme of twentyfifteen
+  Author:       Reinhard Stockinger
+  Author URI:   http://www.apa.at
+  Template:     twentyfifteen
+  Version:      1.0.0
+  Tags:         black, green, white, light, dark, two-columns, three-columns, left-sidebar, right-sidebar, fixed-layout, responsive-layout, custom-background, custom-header, custom-menu, editor-style, featured-images, flexible-header, full-width-template, microformats, post-formats, rtl-language-support, sticky-post, theme-options, translation-ready, accessibility-ready, responsive-layout, infinite-scroll, post-slider, design, food, journal, magazine, news, photography, portfolio, clean, contemporary, dark, elegant, modern, professional, sophisticated
+ Text Domain:  twenty-fifteen-child
+*/
+
+
+.apa-attachment-ul {
+    border: none;
+    padding: 10px;
+}
+
+.apa-attachment-li {
+    display: inline-block;
+    border: 1px solid black;
+    margin: 5px;
+    padding: 10px;
+    vertical-align: top;
+}
