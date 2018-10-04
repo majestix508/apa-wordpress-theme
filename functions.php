@@ -230,77 +230,234 @@ function custom_upload_mimes ( $existing_mimes=array() ) {
 	return $existing_mimes;
 }
 
-///**
-// * Download an image from the specified URL and attach it to a post.
-// * Modified version of core function media_sideload_image() in /wp-admin/includes/media.php (which returns an html img tag instead of attachment ID)
-// * Additional functionality: ability override actual filename, and to pass $post_data to override values in wp_insert_attachment (original only allowed $desc)
-// *
-// * @since 1.4 Somatic Framework
-// *
-// * @param string $url (required) The URL of the image to download
-// * @param int $post_id (required) The post ID the media is to be associated with
-// * @param bool $thumb (optional) Whether to make this attachment the Featured Image for the post (post_thumbnail)
-// * @param string $filename (optional) Replacement filename for the URL filename (do not include extension)
-// * @param array $post_data (optional) Array of key => values for wp_posts table (ex: 'post_title' => 'foobar', 'post_status' => 'draft')
-// * @return int|object The ID of the attachment or a WP_Error on failure *
-//*/
-// function somatic_attach_external_image( $url = null, $post_id = null, $thumb = null, $filename = null, $post_data = array() ) {
-// 	if ( !$url || !$post_id ) return new WP_Error('missing', "Need a valid URL and post ID...");
-// }
-//
-// require_once( ABSPATH . 'wp-admin/includes/file.php' );
-// // Download file to temp location, returns full server path to temp file, ex; /home/user/public_html/mysite/wp-content/26192277_640.tmp
-//$tmp = download_url( $url );
-//// If error storing temporarily,unlink
-// if ( is_wp_error( $tmp ) ) {
-//	@unlink($file_array['tmp_name']);
-//// clean up
-//$file_array['tmp_name'] = '';
-//return $tmp;
-//// output wp_error }
-//preg_match('/[^\?]+\.(jpg|JPG|jpe|JPE|jpeg|JPEG|gif|GIF|png|PNG)/', $url, $matches);
-//// fix file filename for query strings
-//$url_filename = basename($matches[0]);
-//// extract filename from url for title
-//$url_type = wp_check_filetype($url_filename);
-//// determine file type (ext and mime/type)
-//// override filename if given, reconstruct server path
-//if ( !empty( $filename ) ) { $filename = sanitize_file_name($filename); $tmppath = pathinfo( $tmp );
-//// extract path parts
-//$new = $tmppath['dirname'] . "/". $filename . "." . $tmppath['extension'];
-//// build new path
-//rename($tmp, $new);
-//// renames temp file on server
-//$tmp = $new;
-//// push new filename (in path) to be used in file array later
-//}
-//// assemble file data (should be built like $_FILES since wp_handle_sideload() will be using)
-//$file_array['tmp_name'] = $tmp;
-//// full server path to temp file
-//if ( !empty( $filename ) ) { $file_array['name'] = $filename . "." . $url_type['ext'];
-//// user given filename for title, add original URL extension
-//} else {
-//	$file_array['name'] = $url_filename;
-//}
-//// just use original URL filename
-//}
-//// set additional wp_posts columns
-//if ( empty( $post_data['post_title'] ) ) { $post_data['post_title'] = basename($url_filename, "." . $url_type['ext']);
-//// just use the original filename (no extension)
-//}
-//// make sure gets tied to parent
-//if ( empty( $post_data['post_parent'] ) ) { $post_data['post_parent'] = $post_id; }
-//// required libraries for media_handle_sideload
-//require_once(ABSPATH . 'wp-admin/includes/file.php');
-// require_once(ABSPATH . 'wp-admin/includes/media.php');
-// require_once(ABSPATH . 'wp-admin/includes/image.php');
-// // do the validation and storage stuff
-//$att_id = media_handle_sideload( $file_array, $post_id, null, $post_data );
-//// $post_data can override the items saved to wp_posts table, like post_mime_type, guid, post_parent, post_title, post_content, post_status
-//// If error storing permanently, unlink
-//if ( is_wp_error($att_id) ) { @unlink($file_array['tmp_name']);
-//// clean up
-//return $att_id;
-//// output wp_error
-//} // set as post thumbnail if desired
-//if ($thumb) { set_post_thumbnail($post_id, $att_id); } return $att_id; }
+
+add_action( 'add_meta_boxes', 'apa_meta_init' );
+function apa_meta_init() {
+	add_meta_box(
+		'newsmlpost_source',
+		__('Source','newsml-import'),
+		'newsmlpost_source_box_callback',
+		'newsml_post'
+	);
+
+	add_meta_box(
+		'newsmlpost_urgency',
+		__('Urgency','newsml-import'),
+		'newsmlpost_urgency_box_callback',
+		'newsml_post'
+	);
+
+	add_meta_box(
+		'newsmlpost_desks',
+		__('Desks','newsml-import'),
+		'newsmlpost_desks_box_callback',
+		'newsml_post'
+	);
+
+	add_meta_box(
+		'newsmlpost_slugline',
+		__('Slugline','newsml-import'),
+		'newsmlpost_slugline_box_callback',
+		'newsml_post'
+	);
+}
+
+/**
+ * Renders the slugline box for the newsml_post to the add/edit page.
+ *
+ * @author Reinhard Stockinger
+ *
+ * @param mixed $post The post whose metadata is to load.
+ */
+function newsmlpost_slugline_box_callback( $post ) {
+	wp_nonce_field('newsmlpost_meta_box', 'newsmlpost_meta_box_nonce');
+
+	$value = get_post_meta($post->ID, 'newsml_meta_slugline', true);
+
+	echo '<label for="newsmlpost_slugline">';
+	_e('Slugline', 'newsml-import');
+	echo '</label>';
+	echo '<input type="text" id="newsmlpost_slugline" name="newsmlpost_slugline" value="' . esc_attr( $value) . '" size="25" />';
+}
+
+/**
+ * Renders the desk box for the newsml_post to the add/edit page.
+ *
+ * @author Reinhard Stockinger
+ *
+ * @param mixed $post The post whose metadata is to load.
+ */
+function newsmlpost_desks_box_callback( $post ) {
+	wp_nonce_field('newsmlpost_meta_box', 'newsmlpost_meta_box_nonce');
+
+	$value = get_post_meta($post->ID, 'newsml_meta_desks', true);
+
+	echo '<label for="newsmlpost_desks">';
+	_e('Desks', 'newsml-import');
+	echo '</label>';
+	echo '<input type="text" id="newsmlpost_desks" name="newsmlpost_desks" value="' . esc_attr( $value) . '" size="25" />';
+}
+
+/**
+ * Renders the urgency box for the newsml_post to the add/edit page.
+ *
+ * @author Reinhard Stockinger
+ *
+ * @param mixed $post The post whose metadata is to load.
+ */
+function newsmlpost_urgency_box_callback( $post ) {
+	wp_nonce_field('newsmlpost_meta_box', 'newsmlpost_meta_box_nonce');
+
+	$value = get_post_meta($post->ID, 'newsml_meta_urgency', true);
+
+	echo '<label for="newsmlpost_urgency">';
+	_e('Urgency', 'newsml-import');
+	echo '</label>';
+	if ($post->post_status !== 'publish') {
+		//Default to 5!
+		echo '<input type="text" id="newsmlpost_urgency" name="newsmlpost_urgency" value="5" size="5" />';
+	}
+	else {
+		echo '<input type="text" id="newsmlpost_urgency" name="newsmlpost_urgency" value="' . esc_attr( $value) . '" size="5" />';
+	}
+}
+
+/**
+ * Renders the source box for the newsml_post to the add/edit page.
+ *
+ * @author Reinhard Stockinger
+ *
+ * @param mixed $post The post whose metadata is to load.
+ */
+function newsmlpost_source_box_callback( $post ) {
+	wp_nonce_field('newsmlpost_meta_box', 'newsmlpost_meta_box_nonce');
+
+	$value = get_post_meta($post->ID, 'newsml_meta_source', true);
+
+	echo '<label for="newsmlpost_source">';
+	_e('Source', 'newsml-import');
+	echo '</label>';
+
+	if ($post->post_status !== 'publish'){
+		//OTS is default source in a new article
+		echo '<input type="text" id="newsmlpost_source" name="newsmlpost_source" value="APA-OTS Originaltext-Service" size="25" readonly/>';
+
+	}
+	else {
+		echo '<input type="text" id="newsmlpost_source" name="newsmlpost_source" value="' . esc_attr( $value) . '" size="25" readonly/>';
+
+		//echo '<select id="newsmlpost_source" name="newsmlpost_source">';
+		//echo '<option value="Basisdienst" '.selected($value,"Basisdienst").'>APA Basisdienst</option>';
+		//echo '<option value="APA Bilderdienst" '.selected($value,"APA Bilderdienst").'>APA Bilderdienst</option>';
+		//echo '<option value="APA Grafikdienst" '.selected($value,"APA Grafikdienst").'>APA Grafikdienst</option>';
+		//echo '<option value="APA-OTS Originaltext-Service" '.selected($value,"APA-OTS Originaltext-Service").'>APA-OTS Originaltext-Service</option>';
+		//echo '</select>';
+	}
+}
+
+add_action( 'save_post', 'apa_save_newsmlpost_meta' );
+/**
+ * Saves the changes of metaboxes to the database (add/edit).
+ *
+ * @author Reinhard Stockinger
+ *
+ * @param int $post_id The ID of the post whose metadata is to be saved.
+ * @return mixed Returns the $post_id if not successful.
+ */
+function apa_save_newsmlpost_meta( $post_id ) {
+
+	if ( ! isset( $_POST['newsmlpost_meta_box_nonce'] ) ) {
+		return $post_id;
+	}
+
+	$nonce = sanitize_text_field( $_POST['newsmlpost_meta_box_nonce'] );
+
+	if ( ! wp_verify_nonce( $nonce, 'newsmlpost_meta_box' ) ) {
+		return $post_id;
+	}
+
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
+		return $post_id;
+
+	// Check the user's permissions.
+	if ( 'newsml_post' == sanitize_text_field( $_POST['post_type'] ) ) {
+
+		if ( ! current_user_can( 'edit_page', $post_id ) )
+			return $post_id;
+
+	} else {
+
+		if ( ! current_user_can( 'edit_post', $post_id ) )
+			return $post_id;
+	}
+
+	// Sanitize the user input.
+	$sanitized_source = sanitize_text_field( $_POST['newsmlpost_source'] );
+	$sanitized_urgency = sanitize_text_field( $_POST['newsmlpost_urgency'] );
+	$sanitized_desks = sanitize_text_field( $_POST['newsmlpost_desks'] );
+	$sanitized_slugline = sanitize_text_field( $_POST['newsmlpost_slugline'] );
+
+	// Update the meta field.
+	update_post_meta( $post_id, 'newsml_meta_source', $sanitized_source );
+	update_post_meta( $post_id, 'newsml_meta_urgency', $sanitized_urgency );
+	update_post_meta( $post_id, 'newsml_meta_desks', $sanitized_desks );
+	update_post_meta( $post_id, 'newsml_meta_slugline', $sanitized_slugline );
+}
+
+
+// Add Column to the admin View!
+add_filter('manage_newsml_post_posts_columns', 'set_custom_edit_columns');
+function set_custom_edit_columns($columns) {
+	$columns['source'] = __('Source','newsml-import');
+	$columns['mldnr'] = __('Articlenr','newsml-import');
+	return $columns;
+}
+
+add_action('manage_newsml_post_posts_custom_column', 'custom_apa_column', 10,2);
+function custom_apa_column($column, $post_id) {
+	switch ( $column) {
+		case 'source' :
+			echo get_post_meta($post_id, 'newsml_meta_source', true);
+			break;
+		case 'mldnr' :
+			echo apa_get_article_number($post_id);
+			break;
+	}
+}
+
+// Sortierung in der newsml-post admin list!
+add_filter('manage_edit-newsml_post_sortable_columns', 'apa_newsml_sortable_columns');
+function apa_newsml_sortable_columns($columns){
+	$columns['source'] = 'apa_source';
+	$columns['mldnr'] = 'apa_mldnr';
+	return $columns;
+}
+
+add_action('pre_get_posts','apa_newsml_posts_orderby');
+function apa_newsml_posts_orderby($query) {
+	if( ! is_admin() || ! $query->is_main_query() ) {
+		return;
+	}
+
+	if ( 'apa_source' === $query->get( 'orderby') ) {
+		$query->set( 'orderby', 'meta_value' );
+		$query->set( 'meta_key', 'newsml_meta_source' );
+		$query->set( 'meta_type', 'char' );
+	}
+	if ( 'apa_mldnr' === $query->get( 'orderby') ) {
+		$query->set( 'orderby', 'meta_value' );
+		$query->set( 'meta_key', 'newsml_meta_guid' );
+		$query->set( 'meta_type', 'char' );
+	}
+}
+
+add_action( 'admin_head', 'hide_mediatopic_box'  );
+function hide_mediatopic_box() {
+	global $post;
+	global $pagenow;
+	if (is_admin() && $pagenow=='post-new.php') {
+		//remove mediatopic box on insert
+		remove_meta_box('newsml_mediatopicdiv','newsml_post','side');
+	}
+}
