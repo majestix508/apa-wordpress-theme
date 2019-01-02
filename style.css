@@ -23,3 +23,49 @@
     padding: 10px;
     vertical-align: top;
 }
+
+.prio-3 {
+    background: orange;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 3px;
+    padding: 2px 10px 3px 10px;
+    margin-left: 2px;
+    margin-right: 5px;
+    color:#fff;
+    letter-spacing: 1px;
+}
+
+.prio-2 {
+    background: green;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 3px;
+    padding: 2px 10px 3px 10px;
+    margin-left: 2px;
+    margin-right: 5px;
+    color:#fff;
+    letter-spacing: 1px;
+}
+
+.prio-1 {
+    background: green;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 3px;
+    padding: 2px 10px 3px 10px;
+    margin-left: 2px;
+    margin-right: 5px;
+    color:#fff;
+    letter-spacing: 1px;
+}
+
+.article-treffer {
+    padding-top: 5px !important;
+    padding-left: 10px !important;
+    margin-top: 5px !important;
+}
+
+main article.article-treffer:nth-child(odd){
+    background-color: #CDCDCD;
+}

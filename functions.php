@@ -11,6 +11,28 @@ function theme_enqueue_styles() {
 	);
 }
 
+function apa_article_header() {
+
+	echo '<span class="report-meta-info" style="font-weight:normal;">';
+	echo '<span class="source">' . apa_get_article_number(get_the_ID()) . "</span>";
+	$prio = apa_get_urgency(get_the_ID());
+	echo ' ' . $prio;
+	if (apa_get_desks(get_the_ID()) != ""){
+		echo ' ' . apa_get_desks(get_the_ID());
+	}
+	echo ' ' . get_the_modified_date() . ' ' . get_the_modified_time();
+	echo '<br/>';
+
+
+
+	if (apa_get_slugline((get_the_ID()))!="" ){
+		echo apa_get_slugline((get_the_ID()));
+	}
+
+	echo '</span>';
+
+}
+
 if ( ! function_exists( 'apa_entry_meta' ) ) :
 	/**
 	 * Prints HTML with meta information for the categories, tags.
@@ -32,10 +54,10 @@ if ( ! function_exists( 'apa_entry_meta' ) ) :
 		}
 
 		if ( in_array( get_post_type(), array( 'newsml_post', 'post', 'attachment' ) ) ) {
-			$time_string = '<time class="entry-date published updated" datetime="%1$s">%2$s %5$s</time>';
+			$time_string = '<time class="entry-date published updated" datetime="%1$s">%2$s <br/>%5$s</time>';
 
 			if ( get_the_time( 'U' ) !== get_the_modified_time( 'U' ) ) {
-				$time_string = '<time class="entry-date published" datetime="%1$s">%2$s</time><time class="updated" datetime="%3$s">%4$s %5$s</time>';
+				$time_string = '<time class="entry-date published" datetime="%1$s">%2$s</time><time class="updated" datetime="%3$s">%4$s <br/>%5$s</time>';
 			}
 
 			$time_string = sprintf( $time_string,
@@ -46,18 +68,58 @@ if ( ! function_exists( 'apa_entry_meta' ) ) :
 			    get_the_modified_time()
 			);
 
-			printf( '<span class="posted-on"><span class="screen-reader-text">%1$s </span><a href="%2$s" rel="bookmark">%3$s</a></span>',
-				_x( 'Posted on', 'Used before publish date.', 'twentyfifteen' ),
-				esc_url( get_permalink() ),
-				$time_string
-			);
+			//printf( '<span class="posted-on"><span class="screen-reader-text">%1$s </span><a href="%2$s" rel="bookmark">%3$s</a></span>',
+			//	_x( 'Posted on', 'Used before publish date.', 'twentyfifteen' ),
+			//	esc_url( get_permalink() ),
+			//	$time_string
+			//);
 
-			echo "<span>" . apa_get_article_number(get_the_ID()) . "</span>";
+			echo '<div id="article-datetime" style="text-align:right; float:left;padding: 18px 5px 16px; font-weight:bold; vertical-align: top">' . get_the_modified_date() . '<br/>' . get_the_modified_time() . '</div>';
 
-			echo "<span> Prioritaet: " . apa_get_urgency(get_the_ID()) . "</span>";
-			echo "<span> Ressorts: " . apa_get_desks(get_the_ID()) . "</span>";
-			//echo "<span> Timezone:" . date_default_timezone_get() . "</span>";
-			echo "<span> Source: ".apa_get_source(get_the_ID())."</span>";
+			$prio = apa_get_urgency(get_the_ID());
+			$priostring="";
+			$priospan="";
+			if ($prio == "3"){
+				$priostring="Eilt, ";
+				$priospan='<span class="prio-3">EILT</span>';
+			}
+			if ($prio == "2"){
+				$priostring="Vorrang, ";
+				$priospan='<span class="prio-2">VORRANG</span>';
+			}
+			if ($prio == "1"){
+				$priostring="Blitz, ";
+				$priospan='<span class="prio-1">BLITZ</span>';
+			}
+			echo '<div style="float:left;padding: 18px 5px 16px; font-weight:bold; vertical-align: top;width:80%;">';
+			if (has_post_thumbnail()){
+				echo '<div style="float:right;max-width:200px;height:100%;">';
+				the_post_thumbnail('thumbnail');
+				echo '</div>';
+			}
+			echo $priospan;
+			echo '<a href="'.esc_url( get_permalink() ).'">';
+			echo the_title( '', '' ) . '</a><br/>';
+			echo '<span class="report-meta-info" style="font-weight:normal;">';
+			echo '<span class="source">' . apa_get_article_number(get_the_ID()) . "</span>";
+            if ($priostring!=""){
+            	echo ', ' . $priostring;
+            }
+            if (apa_get_desks(get_the_ID()) != ""){
+            	echo ', ' . apa_get_desks(get_the_ID());
+            }
+            if (apa_get_slugline((get_the_ID()))!="" ){
+            	echo ', '.apa_get_slugline((get_the_ID()));
+            }
+            echo '</span>';
+
+            echo '</div>';
+
+
+            echo '<div style="clear:both" />';
+
+			//echo "<span> Prioritaet: " . apa_get_urgency(get_the_ID()) . "</span>";
+			//echo "<span> Source: ".apa_get_source(get_the_ID())."</span>";
 		}
 
 		if ( 'post' == get_post_type() ) {
@@ -86,24 +148,6 @@ if ( ! function_exists( 'apa_entry_meta' ) ) :
 			}
 		}
 
-		if ( is_attachment() && wp_attachment_is_image() ) {
-			// Retrieve attachment metadata.
-			$metadata = wp_get_attachment_metadata();
-
-			printf( '<span class="full-size-link"><span class="screen-reader-text">%1$s </span><a href="%2$s">%3$s &times; %4$s</a></span>',
-				_x( 'Full size', 'Used before full size attachment link.', 'twentyfifteen' ),
-				esc_url( wp_get_attachment_url() ),
-				$metadata['width'],
-				$metadata['height']
-			);
-		}
-
-		if ( ! is_single() && ! post_password_required() && ( comments_open() || get_comments_number() ) ) {
-			echo '<span class="comments-link">';
-			/* translators: %s: post title */
-			comments_popup_link( sprintf( __( 'Leave a comment<span class="screen-reader-text"> on %s</span>', 'twentyfifteen' ), get_the_title() ) );
-			echo '</span>';
-		}
 	}
 endif;
 
@@ -137,6 +181,18 @@ endif;
 		$source="";
 		foreach ($myvals as $key=>$val) {
 			if ($key === "newsml_meta_source"){
+				$source= $val[0];
+				break;
+			}
+		}
+		return $source;
+	}
+
+	function apa_get_slugline($postId) {
+		$myvals = get_post_meta($postId);
+		$source="";
+		foreach ($myvals as $key=>$val) {
+			if ($key === "newsml_meta_slugline"){
 				$source= $val[0];
 				break;
 			}

@@ -18,11 +18,26 @@
 
 	<header class="entry-header">
 		<?php
-			if ( is_single() ) :
-				the_title( '<h1 class="entry-title">', '</h1>' );
-			else :
+			if ( is_single() ) {
+				apa_article_header();
+				echo "<br/><br/>";
+                the_title( '<h1 class="entry-title">', '</h1>' );
+				$myvals = get_post_meta($post->ID);
+				$subtitle="";
+				foreach ($myvals as $key=>$val) {
+					if ($key === "newsml_meta_subtitle"){
+						$subtitle= $val[0];
+						break;
+					}
+				}
+                if ($subtitle != "") {
+                    echo '<h2>Utl.: ' . $subtitle . '</h2><br/>';
+                }
+            }
+			else {
 				the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark">', esc_url( get_permalink() ) ), '</a></h2>' );
-			endif;
+
+			}
 		?>
 	</header><!-- .entry-header -->
 
@@ -86,7 +101,6 @@
 	?>
 
 	<footer class="entry-footer">
-		<?php apa_entry_meta(); ?>
 		<?php edit_post_link( __( 'Edit', 'twentyfifteen' ), '<span class="edit-link">', '</span>' ); ?>
 	</footer><!-- .entry-footer -->
 
